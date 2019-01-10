@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { createStore } from "redux";
 
 const view = m => {
 	const { runnig, time } = m;
@@ -7,7 +8,7 @@ const view = m => {
 	const seconds = time - minutes * 60;
 
 	const handler = () => {
-		container.dispatch(runnig ? "STOP" : "START");
+		container.dispatch(runnig ? { type: "STOP" } : { type: "START" });
 	};
 
 	return (
@@ -19,43 +20,29 @@ const view = m => {
 };
 
 const update = (model, intent) => {
-	let state = {};
 	const { time, runnig } = model;
-	switch (intent) {
+	switch (intent.type) {
 		case "TICK":
-			state = Object.assign(model, {
+			model = Object.assign(model, {
 				time: time + (runnig ? 1 : 0)
 			});
 			break;
 		case "START":
-			state = Object.assign(model, {
+			model = Object.assign(model, {
 				runnig: true
 			});
 			break;
 		case "STOP":
-			state = Object.assign(model, {
+			model = Object.assign(model, {
 				runnig: false
 			});
 			break;
 	}
 
-	return state;
+	return model;
 };
 
-const createStore = reducer => {
-	let internalState = { runnig: true, time: 0 };
-	const handlers = [];
-	return {
-		getState: () => internalState,
-		dispatch: intent => {
-			internalState = reducer(internalState, intent);
-			handlers.forEach(h => h());
-		},
-		subscribe: handler => handlers.push(handler)
-	};
-};
-
-const container = createStore(update);
+const container = createStore(update, { runnig: true, time: 0 });
 
 const render = () => {
 	ReactDOM.render(
@@ -67,11 +54,5 @@ const render = () => {
 container.subscribe(render);
 
 setInterval(() => {
-	container.dispatch("TICK");
+	container.dispatch({ type: "TICK" });
 }, 1000);
-
-
-
-
-
-
